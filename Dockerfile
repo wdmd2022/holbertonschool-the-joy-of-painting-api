@@ -8,4 +8,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 # copy everything from our local directory to the working directory
 COPY . .
 
-CMD ["flask", "run", "--host=0.0.0.0"]
+CMD ["python", "./server/app.py"]
