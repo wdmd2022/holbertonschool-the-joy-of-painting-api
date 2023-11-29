@@ -15,6 +15,7 @@ def first_connect_to_the_database():
 
 # let's make sure that database is actually available
 my_connection = first_connect_to_the_database()
+print("awesome we did it")
 
 # after this, we will import and process the data
 
