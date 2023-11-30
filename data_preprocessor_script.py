@@ -33,9 +33,11 @@ airdates_path = './data_sources/The Joy Of Painting - Episode Dates'
 # with colors, we set index_col to 3 because that is the painting title.
 colors = pd.read_csv(colors_path, index_col=3)
 
-# with subjects, we set index_col to 1 because that is the painting title, albeit
-# in all-caps form as if it is being yelled.
-subjects = pd.read_csv(subjects_path, index_col=1)
+# with subjects, we will wait, not yet setting index_col to 1 because while that is
+# the painting title, it is in all-caps form as if it is being yelled, and if we set
+# it as the index now, we won't be able to manipulate it later on in order to correct
+# the capitalization before we do a matching operation to put our dataframes together.
+subjects = pd.read_csv(subjects_path)
 
 # with airdates, there isn't a delimiter, but each column looks something like:
 # "A Walk in the Woods" (January 11, 1983)
@@ -73,8 +75,31 @@ airdates['extra_episode_info'] = airdates[1].str.extract(r'\)\s*(.*)')
 airdates[1] = airdates[1].str.replace(r'\)\s*.*', ')', regex=True)
 # and now let's make sure all the columns (i.e., Series) have sensible column names
 airdates.columns = ['title', 'aired', 'month', 'extra_episode_info']
-# and let's set the index column to be the title column
+# and let's copy the title column to a new one, because we will want to use and manipulate it
+# for matching purposes later, but we can't do that if we've already set it to be the index
+airdates['episode_title'] = airdates['title']
+# and now let's finally set the index!
 airdates.set_index('title', inplace=True)
+
+
+# now let's clean up subjects. This will require us to do some more work on airdates as well.
+# first, let's remove the triple " surrounding each capitalized episode title
+subjects['TITLE'] = subjects['TITLE'].str.replace('"', '')
+# then, let's create a temporary column in airdates to capitalize so we can match titles
+# and then eventually copy the correctly-formatted title back to the subjects DataFrame
+airdates['temp_capitalized_title'] = airdates['episode_title'].str.upper()
+# now let's match and replace
+for index, row in subjects.iterrows():
+    # first we find the match to the newly-capitalized column in airdates
+    match = airdates[airdates['temp_capitalized_title'] == row['TITLE']]
+    if not match.empty:
+        subjects.at[index, 'TITLE'] = match['episode_title'].values[0]
+airdates.drop('temp_capitalized_title', axis=1, inplace=True)
+
+pd.set_option('display.max_rows', None)
+
+sorted_airdates = airdates.sort_values(by='episode_title')
+print(sorted_airdates)
 
 
 
