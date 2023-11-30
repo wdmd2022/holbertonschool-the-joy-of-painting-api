@@ -75,7 +75,8 @@ airdates.columns = ['title', 'aired', 'month', 'extra_episode_info']
 airdates['aired_datetime'] = pd.to_datetime(airdates['aired'].str.extract(r'\((.*?)\)')[0])
 # now let's sort it in place
 airdates.sort_values(by='aired_datetime', inplace=True)
-
+# and let's remove those silly parentheses from the original `aired` column
+airdates['aired'] = airdates['aired'].str.replace(r'\(|\)', '', regex=True)
 
 # now let's clean up subjects using the nice titles from airdates
 subjects['TITLE'] = airdates['title']
@@ -85,9 +86,37 @@ subjects['TITLE'] = airdates['title']
 colors.drop(colors.columns[0], axis=1, inplace=True)
 # and now perform the matching and updating based on airdates
 colors['painting_title'] = airdates['title']
+# and let's remove the weird `\r\n` that appears in some color names in one column
+colors['colors'] = colors['colors'].str.replace(r'\\r\\n', '', regex=True)
 
-# pd.set_option('display.max_rows', None)
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# now we get ready to merge!
 
+# first, let's set some indexes
+# since indexes don't behave like normal columns, and we totally want a column in our final table with
+# the episode name (which we will also be matching on), let's copy the value over to an additional column
+# so we can do operations on it later.
+airdates['episode_title'] = airdates['title']
+
+# now let's set the indices for airdates, colors, and subjects
+airdates.set_index('title', inplace=True)
+colors.set_index('painting_title', inplace=True)
+subjects.set_index('TITLE', inplace=True)
+
+
+
+
+
+pd.set_option('display.max_rows', None)
+# pd.set_option('display.max_columns', None)
+print(subjects.index)
+print(airdates.index)
+print(colors.index)
+# subjects.to_excel('subjects.xlsx')
+# airdates.to_excel('airdates.xlsx')
+# colors.to_excel('colors2.xlsx')
+
+# 
 
 #######################################################################################################
 
