@@ -75,31 +75,20 @@ airdates['extra_episode_info'] = airdates[1].str.extract(r'\)\s*(.*)')
 airdates[1] = airdates[1].str.replace(r'\)\s*.*', ')', regex=True)
 # and now let's make sure all the columns (i.e., Series) have sensible column names
 airdates.columns = ['title', 'aired', 'month', 'extra_episode_info']
-# and let's copy the title column to a new one, because we will want to use and manipulate it
-# for matching purposes later, but we can't do that if we've already set it to be the index
-airdates['episode_title'] = airdates['title']
-# and now let's finally set the index!
-airdates.set_index('title', inplace=True)
+# since there are so many typos in the other DataFrames, let's convert 'aired' to a datetime
+# that can be sorted then we can match based on order in which they aired.
+airdates['aired_datetime'] = pd.to_datetime(airdates['aired'].str.extract(r'\((.*?)\)')[0])
+# now let's sort it in place
+airdates.sort_values(by='aired_datetime', inplace=True)
 
 
-# now let's clean up subjects. This will require us to do some more work on airdates as well.
-# first, let's remove the triple " surrounding each capitalized episode title
-subjects['TITLE'] = subjects['TITLE'].str.replace('"', '')
-# then, let's create a temporary column in airdates to capitalize so we can match titles
-# and then eventually copy the correctly-formatted title back to the subjects DataFrame
-airdates['temp_capitalized_title'] = airdates['episode_title'].str.upper()
-# now let's match and replace
-for index, row in subjects.iterrows():
-    # first we find the match to the newly-capitalized column in airdates
-    match = airdates[airdates['temp_capitalized_title'] == row['TITLE']]
-    if not match.empty:
-        subjects.at[index, 'TITLE'] = match['episode_title'].values[0]
-airdates.drop('temp_capitalized_title', axis=1, inplace=True)
+# now let's clean up subjects.
+subjects['TITLE'] = airdates['title']
 
 pd.set_option('display.max_rows', None)
 
-sorted_airdates = airdates.sort_values(by='episode_title')
-print(sorted_airdates)
+print(subjects)
+
 
 
 
