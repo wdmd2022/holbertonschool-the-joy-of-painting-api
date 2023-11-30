@@ -30,8 +30,8 @@ airdates_path = './data_sources/The Joy Of Painting - Episode Dates'
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # now, let's put them into pandas DataFrames (awwww yeah)
 
-# with colors, we set index_col to 3 because that is the painting title.
-colors = pd.read_csv(colors_path, index_col=3)
+# with colors
+colors = pd.read_csv(colors_path)
 
 # with subjects, we will wait, not yet setting index_col to 1 because while that is
 # the painting title, it is in all-caps form as if it is being yelled, and if we set
@@ -85,12 +85,22 @@ airdates.sort_values(by='aired_datetime', inplace=True)
 # now let's clean up subjects.
 subjects['TITLE'] = airdates['title']
 
-pd.set_option('display.max_rows', None)
+colors['title_match'] = colors['painting_title'].isin(airdates['title'])
+print(colors['title_match'].value_counts())
 
-print(subjects)
+mismatched_titles = colors[~colors['title_match']]
+print(mismatched_titles['painting_title'])
 
+# and since that was so much fun, let's do it to colors too:
+colors['painting_title'] = airdates['title']
 
+# pd.set_option('display.max_rows', None)
 
+colors['title_match'] = colors['painting_title'].isin(airdates['title'])
+print(colors['title_match'].value_counts())
+
+mismatched_titles = colors[~colors['title_match']]
+print(mismatched_titles['painting_title'])
 
 
 
