@@ -52,12 +52,7 @@ airdates = pd.read_csv(airdates_path, header=None, sep=airdate_delim, engine='py
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # now we clean!
 
-# let's clean up colors first.
-# let's drop that first column of nonsense values
-colors.drop(colors.columns[0], axis=1, inplace=True)
-
-
-# now let's clean up airdates.
+# let's start our cleaning with the airdates DataFrame.
 # first, let's get rid of the quotation marks in the strings representing the episode titles
 # And since airdates.columns[0] would only refer to the label (like above), we need to use
 # airdates[0] to get a reference to the entire first column of the DataFrame.
@@ -82,26 +77,16 @@ airdates['aired_datetime'] = pd.to_datetime(airdates['aired'].str.extract(r'\((.
 airdates.sort_values(by='aired_datetime', inplace=True)
 
 
-# now let's clean up subjects.
+# now let's clean up subjects using the nice titles from airdates
 subjects['TITLE'] = airdates['title']
 
-colors['title_match'] = colors['painting_title'].isin(airdates['title'])
-print(colors['title_match'].value_counts())
-
-mismatched_titles = colors[~colors['title_match']]
-print(mismatched_titles['painting_title'])
-
 # and since that was so much fun, let's do it to colors too:
+# first let's drop that first column of nonsense values
+colors.drop(colors.columns[0], axis=1, inplace=True)
+# and now perform the matching and updating based on airdates
 colors['painting_title'] = airdates['title']
 
 # pd.set_option('display.max_rows', None)
-
-colors['title_match'] = colors['painting_title'].isin(airdates['title'])
-print(colors['title_match'].value_counts())
-
-mismatched_titles = colors[~colors['title_match']]
-print(mismatched_titles['painting_title'])
-
 
 
 #######################################################################################################
