@@ -103,23 +103,19 @@ airdates.set_index('title', inplace=True)
 colors.set_index('painting_title', inplace=True)
 subjects.set_index('TITLE', inplace=True)
 
+# now let's rename them so they all match
+colors.index.rename('title', inplace=True)
+subjects.index.rename('title', inplace=True)
 
+# now we can join them
 
+# first let's join airdates with colors
+aircolor = airdates.join(colors, how='outer')
+# then let's join the resulting dataframe with subjects
+final_data = aircolor.join(subjects, how='outer')
 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-pd.set_option('display.max_rows', None)
+# final_data.to_excel('combined.xlsx')
+# pd.set_option('display.max_rows', None)
 # pd.set_option('display.max_columns', None)
-print(subjects.index)
-print(airdates.index)
-print(colors.index)
-# subjects.to_excel('subjects.xlsx')
-# airdates.to_excel('airdates.xlsx')
-# colors.to_excel('colors2.xlsx')
-
-# 
-
-#######################################################################################################
-
-# then we will configure the database according to our schema
-
-# then we will populate the database
