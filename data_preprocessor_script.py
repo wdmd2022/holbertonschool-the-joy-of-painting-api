@@ -107,7 +107,7 @@ subjects.set_index('TITLE', inplace=True)
 colors.index.rename('title', inplace=True)
 subjects.index.rename('title', inplace=True)
 
-# now we can join them
+# now we can join them!
 
 # first let's join airdates with colors
 aircolor = airdates.join(colors, how='outer')
@@ -115,6 +115,7 @@ aircolor = airdates.join(colors, how='outer')
 final_data = aircolor.join(subjects, how='outer')
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 
 # final_data.to_excel('combined.xlsx')
 # pd.set_option('display.max_rows', None)
