@@ -3,6 +3,19 @@ import mysql.connector
 import time
 import pandas as pd
 import numpy as np
+from sqlalchemy import create_engine
+
+#######################################################################
+################### GENERAL STRUCTURE OF THE SCRIPT ###################
+#######################################################################
+# - make sure the MySQL database has been created using docker-compose
+# - connect to it
+# - get the original, uncleaned data loaded in
+# - use pandas to clean it and prepare for upload in one table
+# - use mysql.connector to create the table with its schema defined
+# - use sqlalchemy to make an engine so we can:
+# - upload the cleaned data into our MySQL database using pandas
+#######################################################################
 
 def first_connect_to_the_database():
     while True:
@@ -31,13 +44,10 @@ airdates_path = '/data_sources/The Joy Of Painting - Episode Dates'
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # now, let's put them into pandas DataFrames (awwww yeah)
 
-# with colors
+# first colors
 colors = pd.read_csv(colors_path)
 
-# with subjects, we will wait, not yet setting index_col to 1 because while that is
-# the painting title, it is in all-caps form as if it is being yelled, and if we set
-# it as the index now, we won't be able to manipulate it later on in order to correct
-# the capitalization before we do a matching operation to put our dataframes together.
+# now subjects
 subjects = pd.read_csv(subjects_path)
 
 # with airdates, there isn't a delimiter, but each column looks something like:
@@ -49,6 +59,7 @@ subjects = pd.read_csv(subjects_path)
 # header is set to None because there is no header row
 airdate_delim = r'(?<=") '
 airdates = pd.read_csv(airdates_path, header=None, sep=airdate_delim, engine='python')
+
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # now we clean!
@@ -94,19 +105,15 @@ colors['colors'] = colors['colors'].str.replace(r'\\r\\n', '', regex=True)
 # now we get ready to merge!
 
 # first, let's set some indexes
-# since indexes don't behave like normal columns, and we totally want a column in our final table with
-# the episode name (which we will also be matching on), let's copy the value over to an additional column
-# so we can do operations on it later.
-airdates['episode_title'] = airdates['title']
+# let's make a column in each, to match them appropriately
+airdates['sequence'] = range(1, len(airdates) + 1)
+colors['sequence'] = range(1, len(colors) + 1)
+subjects['sequence'] = range(1, len(subjects) + 1)
 
 # now let's set the pandas indices for airdates, colors, and subjects
-airdates.set_index('title', inplace=True)
-colors.set_index('painting_title', inplace=True)
-subjects.set_index('TITLE', inplace=True)
-
-# now let's rename them so they all match
-colors.index.rename('title', inplace=True)
-subjects.index.rename('title', inplace=True)
+airdates.set_index('sequence', inplace=True)
+colors.set_index('sequence', inplace=True)
+subjects.set_index('sequence', inplace=True)
 
 # now we can join them!
 
@@ -114,9 +121,13 @@ subjects.index.rename('title', inplace=True)
 aircolor = airdates.join(colors, how='outer')
 # then let's join the resulting dataframe with subjects
 final_data = aircolor.join(subjects, how='outer')
+# now we have one nice, big table! Alright!
+
 # and let's drop that column we made for sorting earlier
 final_data = final_data.drop(columns=['aired_datetime'])
-# and let's also rename EPISODES because mysql is case-insensitive
+# and let's drop other extraneous columns
+final_data = final_data.drop(columns=['painting_title', 'TITLE'])
+# and let's also rename EPISODE because mysql is case-insensitive
 final_data = final_data.rename(columns={'EPISODE': 'season_and_episode'})
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -125,11 +136,11 @@ final_data = final_data.rename(columns={'EPISODE': 'season_and_episode'})
 # first let's make our SQL query that we'll use to create the table
 let_there_be_a_table = """
 CREATE TABLE IF NOT EXISTS episodes (
-    title VARCHAR(27) PRIMARY KEY,
+    sequence INT,
+    title VARCHAR(27),
     aired VARCHAR(18),
     month VARCHAR(9),
     extra_episode_info VARCHAR(150),
-    episode_title VARCHAR(27),
     painting_index INT,
     img_src VARCHAR(51),
     season INT,
@@ -224,6 +235,7 @@ CREATE TABLE IF NOT EXISTS episodes (
     WINDOW_FRAME BOOLEAN,
     WINTER BOOLEAN,
     WOOD_FRAMED BOOLEAN,
+    PRIMARY KEY (sequence),
     INDEX idx_month (month)
 );
 """
@@ -237,3 +249,26 @@ my_connection.commit()
 cursor.close()
 # and close our connection
 my_connection.close()
+# hooray, the table has been created! Now we can move on to filling it up
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# now we can actually import our data!
+
+# the first step is creating a sqlalchemy engine, because pandas requires
+# that we feed it a sqlalchemy.engine (engine or connection) as `con` arg
+alc_dialect_driver = 'mysql+mysqlconnector'
+alc_user = os.environ['MYSQL_USER']
+alc_pass = os.environ['MYSQL_PASSWORD']
+alc_host = os.environ['MYSQL_HOST']
+alc_db = os.environ['MYSQL_DATABASE']
+alchemy_engine = create_engine(
+    f"{alc_dialect_driver}://{alc_user}:{alc_pass}@{alc_host}/{alc_db}"
+)
+
+# the next step is to use this engine to make the pandas to_sql command work
+final_data.to_sql(
+    'episodes',
+    con=alchemy_engine,
+    if_exists='replace',
+    index=False
+)
