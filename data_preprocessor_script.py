@@ -19,14 +19,15 @@ def first_connect_to_the_database():
 my_connection = first_connect_to_the_database()
 print("awesome we did it")
 
+
 # after this, we will import and process the data
 
 # let's get our data loaded in!
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # first let's make a shorthand so we don't have to type these paths
-colors_path = './data_sources/The Joy Of Painiting - Colors Used'
-subjects_path = './data_sources/The Joy Of Painiting - Subject Matter'
-airdates_path = './data_sources/The Joy Of Painting - Episode Dates'
+colors_path = '/data_sources/The Joy Of Painiting - Colors Used'
+subjects_path = '/data_sources/The Joy Of Painiting - Subject Matter'
+airdates_path = '/data_sources/The Joy Of Painting - Episode Dates'
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # now, let's put them into pandas DataFrames (awwww yeah)
 
@@ -98,7 +99,7 @@ colors['colors'] = colors['colors'].str.replace(r'\\r\\n', '', regex=True)
 # so we can do operations on it later.
 airdates['episode_title'] = airdates['title']
 
-# now let's set the indices for airdates, colors, and subjects
+# now let's set the pandas indices for airdates, colors, and subjects
 airdates.set_index('title', inplace=True)
 colors.set_index('painting_title', inplace=True)
 subjects.set_index('TITLE', inplace=True)
@@ -113,10 +114,124 @@ subjects.index.rename('title', inplace=True)
 aircolor = airdates.join(colors, how='outer')
 # then let's join the resulting dataframe with subjects
 final_data = aircolor.join(subjects, how='outer')
+# and let's drop that column we made for sorting earlier
+final_data = final_data.drop(columns=['aired_datetime'])
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# now we get ready to import!
 
-
-# final_data.to_excel('combined.xlsx')
-# pd.set_option('display.max_rows', None)
-# pd.set_option('display.max_columns', None)
+# first let's make our SQL query that we'll use to create the table
+let_there_be_a_table = """
+CREATE TABLE IF NOT EXISTS episodes (
+    title VARCHAR(27) PRIMARY KEY,
+    aired VARCHAR(18),
+    month VARCHAR(9),
+    extra_episode_info VARCHAR(150),
+    episode_title VARCHAR(27),
+    painting_index INT,
+    img_src VARCHAR(51),
+    season INT,
+    episode INT,
+    num_colors INT,
+    youtube_src VARCHAR(42),
+    colors VARCHAR(249),
+    color_hex VARCHAR(165),
+    Black_Gesso BOOLEAN,
+    Bright_Red BOOLEAN,
+    Burnt_Umber BOOLEAN,
+    Cadmium_Yellow BOOLEAN,
+    Dark_Sienna BOOLEAN,
+    Indian_Red BOOLEAN,
+    Indian_Yellow BOOLEAN,
+    Liquid_Black BOOLEAN,
+    Liquid_Clear BOOLEAN,
+    Midnight_Black BOOLEAN,
+    Phthalo_Blue BOOLEAN,
+    Phthalo_Green BOOLEAN,
+    Prussian_Blue BOOLEAN,
+    Sap_Green BOOLEAN,
+    Titanium_White BOOLEAN,
+    Van_Dyke_Brown BOOLEAN,
+    Yellow_Ochre BOOLEAN,
+    Alizarin_Crimson BOOLEAN,
+    EPISODE VARCHAR(6),
+    APPLE_FRAME BOOLEAN,
+    AURORA_BOREALIS BOOLEAN,
+    BARN BOOLEAN,
+    BEACH BOOLEAN,
+    BOAT BOOLEAN,
+    BRIDGE BOOLEAN,
+    BUILDING BOOLEAN,
+    BUSHES BOOLEAN,
+    CABIN BOOLEAN,
+    CACTUS BOOLEAN,
+    CIRCLE_FRAME BOOLEAN,
+    CIRRUS BOOLEAN,
+    CLIFF BOOLEAN,
+    CLOUDS BOOLEAN,
+    CONIFER BOOLEAN,
+    CUMULUS BOOLEAN,
+    DECIDUOUS BOOLEAN,
+    DIANE_ANDRE BOOLEAN,
+    DOCK BOOLEAN,
+    DOUBLE_OVAL_FRAME BOOLEAN,
+    FARM BOOLEAN,
+    FENCE BOOLEAN,
+    FIRE BOOLEAN,
+    FLORIDA_FRAME BOOLEAN,
+    FLOWERS BOOLEAN,
+    FOG BOOLEAN,
+    FRAMED BOOLEAN,
+    GRASS BOOLEAN,
+    GUEST BOOLEAN,
+    HALF_CIRCLE_FRAME BOOLEAN,
+    HALF_OVAL_FRAME BOOLEAN,
+    HILLS BOOLEAN,
+    LAKE BOOLEAN,
+    LAKES BOOLEAN,
+    LIGHTHOUSE BOOLEAN,
+    MILL BOOLEAN,
+    MOON BOOLEAN,
+    MOUNTAIN BOOLEAN,
+    MOUNTAINS BOOLEAN,
+    NIGHT BOOLEAN,
+    OCEAN BOOLEAN,
+    OVAL_FRAME BOOLEAN,
+    PALM_TREES BOOLEAN,
+    PATH BOOLEAN,
+    PERSON BOOLEAN,
+    PORTRAIT BOOLEAN,
+    RECTANGLE_3D_FRAME BOOLEAN,
+    RECTANGULAR_FRAME BOOLEAN,
+    RIVER BOOLEAN,
+    ROCKS BOOLEAN,
+    SEASHELL_FRAME BOOLEAN,
+    SNOW BOOLEAN,
+    SNOWY_MOUNTAIN BOOLEAN,
+    SPLIT_FRAME BOOLEAN,
+    STEVE_ROSS BOOLEAN,
+    STRUCTURE BOOLEAN,
+    SUN BOOLEAN,
+    TOMB_FRAME BOOLEAN,
+    TREE BOOLEAN,
+    TREES BOOLEAN,
+    TRIPLE_FRAME BOOLEAN,
+    WATERFALL BOOLEAN,
+    WAVES BOOLEAN,
+    WINDMILL BOOLEAN,
+    WINDOW_FRAME BOOLEAN,
+    WINTER BOOLEAN,
+    WOOD_FRAMED BOOLEAN,
+    INDEX idx_month (month)
+);
+"""
+# let's us the MySQL connection we established earlier to create a cursor
+cursor = my_connection.cursor()
+# then use that cursor to run the table creation command
+cursor.execute(let_there_be_a_table)
+# and let's commit our changes to the db
+my_connection.commit()
+# and close our cursor
+cursor.close()
+# and close our connection
+my_connection.close()
