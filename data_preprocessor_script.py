@@ -116,6 +116,8 @@ aircolor = airdates.join(colors, how='outer')
 final_data = aircolor.join(subjects, how='outer')
 # and let's drop that column we made for sorting earlier
 final_data = final_data.drop(columns=['aired_datetime'])
+# and let's also rename EPISODES because mysql is case-insensitive
+final_data = final_data.rename(columns={'EPISODE': 'season_and_episode'})
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # now we get ready to import!
@@ -154,7 +156,7 @@ CREATE TABLE IF NOT EXISTS episodes (
     Van_Dyke_Brown BOOLEAN,
     Yellow_Ochre BOOLEAN,
     Alizarin_Crimson BOOLEAN,
-    EPISODE VARCHAR(6),
+    season_and_episode VARCHAR(6),
     APPLE_FRAME BOOLEAN,
     AURORA_BOREALIS BOOLEAN,
     BARN BOOLEAN,
