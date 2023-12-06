@@ -1,6 +1,7 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, render_template
 from flask_sqlalchemy import SQLAlchemy
 import os
+from flask_cors import CORS
 
 ##############################################################################
 ######################### Joy of Painting API Server #########################
@@ -16,8 +17,8 @@ import os
 ##############################################################################
 
 # first let's initialize the Flask app
-app = Flask(__name__)
-
+app = Flask(__name__, template_folder='../templates')
+CORS(app)
 # Now, with that out of the way let's get this cool little app connected to
 # our MySQL database (I say ours, but really, it's mine. I'm just being gracious.)
 alc_dialect_driver = 'mysql+mysqlconnector'
@@ -176,6 +177,10 @@ def list_episodes():
                       } for ep in episodes_to_return]
     # and finally we (I, thanklessly) turn it into JSON
     return jsonify(episodes_data)
+
+@app.route('/')
+def index():
+    return render_template('index.html')
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000, debug=True)
