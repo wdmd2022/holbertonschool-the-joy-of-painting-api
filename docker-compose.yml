@@ -20,7 +20,11 @@ services:
     ports:
       - "5000:5000"
     environment:
-      - FLASK_ENV=development
+      FLASK_ENV: development
+      MYSQL_HOST: db
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+      MYSQL_DATABASE: mydatabase
     volumes:
       - .:/app
     depends_on:
