@@ -30,4 +30,5 @@ examples:
 
 UML Diagram:
 This is what the dabatase records look like.
+
 ![UML representation of 'episodes' table record](https://github.com/wdmd2022/holbertonschool-the-joy-of-painting-api/blob/4041a92f50a489ec25ab40ffe1048766815e0f6b/uml.png)
