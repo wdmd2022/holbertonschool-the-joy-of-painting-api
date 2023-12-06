@@ -17,3 +17,6 @@ Get list of episodes, optionally filtered by:
     - all: episodes matching all specified filters
     - any: episodes matching any of the specified filters
 Returns: JSON array of episode objects
+
+UML Diagram:
+![UML representation of 'episodes' table record](https://github.com/wdmd2022/holbertonschool-the-joy-of-painting-api/blob/4041a92f50a489ec25ab40ffe1048766815e0f6b/uml.png)
