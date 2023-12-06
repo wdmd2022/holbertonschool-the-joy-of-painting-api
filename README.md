@@ -18,5 +18,19 @@ Get list of episodes, optionally filtered by:
     - any: episodes matching any of the specified filters
 Returns: JSON array of episode objects
 
+examples:
+"I want all the episodes from Feb or March (I'm in a Wintery mood)"
+```http://localhost:5000/api/episodes?month=February&month=March
+```
+
+"I want to see ones where it's snowy or beachy (I'm indecisive)"
+```http://localhost:5000/api/episodes?subject_matter=SNOW&subject_matter=BEACH&filter_mode=any
+```
+
+"I want to see ones where it's snowy AND beachy (I'm ready to be dissapointed)"
+```http://localhost:5000/api/episodes?subject_matter=SNOW&subject_matter=BEACH
+```
+
 UML Diagram:
+This is what the dabatase records look like.
 ![UML representation of 'episodes' table record](https://github.com/wdmd2022/holbertonschool-the-joy-of-painting-api/blob/4041a92f50a489ec25ab40ffe1048766815e0f6b/uml.png)
