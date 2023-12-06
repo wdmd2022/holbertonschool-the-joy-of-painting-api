@@ -265,7 +265,10 @@ alchemy_engine = create_engine(
     f"{alc_dialect_driver}://{alc_user}:{alc_pass}@{alc_host}/{alc_db}"
 )
 
-# the next step is to use this engine to make the pandas to_sql command work
+# the next step is to use this engine to make the pandas to_sql command work.
+# first we'll copy our index over to a normal column (so it goes into the database as a named column)
+final_data['sequence'] = final_data.index
+# and now we'll use pandas' awesome to_sql function to move it into our database
 final_data.to_sql(
     'episodes',
     con=alchemy_engine,

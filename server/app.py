@@ -1,4 +1,4 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
 import os
 
@@ -69,6 +69,7 @@ class Episode(db.Model):
     Van_Dyke_Brown = db.Column(db.Boolean)
     Yellow_Ochre = db.Column(db.Boolean)
     Alizarin_Crimson = db.Column(db.Boolean)
+    season_and_episode = db.Column(db.String(6))
     APPLE_FRAME = db.Column(db.Boolean)
     AURORA_BOREALIS = db.Column(db.Boolean)
     BARN = db.Column(db.Boolean)
@@ -137,11 +138,44 @@ class Episode(db.Model):
     WINTER = db.Column(db.Boolean)
     WOOD_FRAMED = db.Column(db.Boolean)
 
-# and just for fun let's configure an all-episodes route
-@app.route('/api/episodes')
-def list_all():
-    data = {"doug": "rules"}
-    return jsonify(data)
+# and now we can define our route to either return all episodes or filtered
+@app.route('/api/episodes', methods=['GET'])
+def list_episodes():
+    # let's grab those query parameters
+    month = request.args.getlist('month')
+    subject_matter = request.args.getlist('subject_matter')
+    colors_used = request.args.getlist('colors_used')
+    # including the filter mode (which defaults to 'all')
+    filter_mode = request.args.get('filter_mode', 'all')
+    # now we reference a query to the entire data set before filtering
+    query = Episode.query
+    # and we filter down based on the mode (any or all)
+    if filter_mode == 'any':
+        month_filter = [Episode.month == mon for mon in month] if month else []
+        subject_filter = [getattr(Episode, subj) == True for subj in subject_matter] if subject_matter else []
+        colors_filter = [getattr(Episode, color) == True for color in colors_used] if colors_used else []
+        # put it all together and what do you get? (a big pile of filters)
+        filters = month_filter + subject_filter + colors_filter
+        if filters:
+            query = query.filter(db.or_(*filters))
+    else:
+        if month:
+            query = query.filter(Episode.month.in_(month))
+        for subj in subject_matter:
+            query = query.filter(getattr(Episode, subj) == True)
+        for color in colors_used:
+            query = query.filter(getattr(Episode, color) == True)
+    # now actually execute the really well-constructe query
+    episodes_to_return = query.all()
+    episodes_data = [{"title": ep.title,
+                      "episode": ep.season_and_episode,
+                      "aired": ep.aired,
+                      "img_src": ep.img_src,
+                      "youtube_src": ep.youtube_src,
+                      "colors": ep.colors,
+                      } for ep in episodes_to_return]
+    # and finally we (I, thanklessly) turn it into JSON
+    return jsonify(episodes_data)
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000, debug=True)
