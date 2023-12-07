@@ -182,5 +182,13 @@ def list_episodes():
 def index():
     return render_template('index.html')
 
+@app.route('/easy')
+def easy_mode():
+    return render_template('easy.html')
+
+@app.route('/cool')
+def hard_mode():
+    return render_template('cool.html')
+
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000, debug=True)

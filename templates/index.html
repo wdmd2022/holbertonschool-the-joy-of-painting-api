@@ -2,86 +2,14 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bob Ross Painting Episodes</title>
-    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        body {
-            background-color: #f0f0f0;
-        }
-        .container {
-            margin-top: 50px;
-        }
-        .card {
-            margin-bottom: 20px;
-        }
-        /* Add more styles as needed */
-    </style>
+    <title>Welcome to Joy of Painting</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
 </head>
 <body>
-    <div class="container">
-        <h1 class="text-center">Bob Ross Painting Episodes</h1>
-        <div class="row mb-3">
-            <div class="col">
-                <input type="text" id="monthInput" class="form-control" placeholder="Month (e.g., January, February)">
-            </div>
-            <div class="col">
-                <input type="text" id="subjectMatterInput" class="form-control" placeholder="Subject Matter (e.g., Snow, Beach)">
-            </div>
-            <div class="col">
-                <input type="text" id="colorsUsedInput" class="form-control" placeholder="Colors Used (e.g., Phthalo Blue, Titanium White)">
-            </div>
-            <div class="col">
-                <button id="searchButton" class="btn btn-primary">Search</button>
-            </div>
-        </div>
-        <div id="results"></div>
+    <div class="container text-center mt-5">
+        <h1>Welcome to the Joy of Painting API</h1>
+        <a href="/easy" class="btn btn-primary mt-3">Easy Mode</a>
+        <a href="/cool" class="btn btn-secondary mt-3">Hard Mode</a>
     </div>
-
-    <script>
-        document.getElementById('searchButton').addEventListener('click', function() {
-            const month = document.getElementById('monthInput').value;
-            const subjectMatter = document.getElementById('subjectMatterInput').value;
-            const colorsUsed = document.getElementById('colorsUsedInput').value;
-
-            let url = `http://localhost:5000/api/episodes?`;
-            if (month) url += `month=${month}&`;
-            if (subjectMatter) url += `subject_matter=${subjectMatter}&`;
-            if (colorsUsed) url += `colors_used=${colorsUsed}`;
-
-            fetch(url)
-                .then(response => response.json())
-                .then(data => displayResults(data))
-                .catch(error => console.error('Error:', error));
-        });
-
-        function displayResults(episodes) {
-            const resultsDiv = document.getElementById('results');
-            resultsDiv.innerHTML = '';
-            episodes.forEach(episode => {
-                const episodeDiv = document.createElement('div');
-                episodeDiv.className = 'card';
-                let attributes = [];
-                for (const key in episode) {
-                    if (episode.hasOwnProperty(key) && episode[key] === true) {
-                        attributes.push(key.replace(/_/g, ' '));
-                    }
-                }
-                episodeDiv.innerHTML = `
-                    <div class="card-body">
-                        <img src="${episode.img_src}" class="card-img-top" alt="${episode.title}">
-                        <h5 class="card-title">${episode.title}</h5>
-                        <p class="card-text">Episode: ${episode.aired} (number ${episode.sequence})</p>
-                        <p class="card-text">Aired: ${episode.aired}</p>
-                        <p class="card-text"># of Colors: ${episode.num_colors}</p>
-                        <p class="card-text">Colors: ${episode.colors}</p>
-                        <p class="card-text">Aired: ${episode.aired}</p>
-                        <p class="card-text">Features: ${attributes.join(', ')}</p>
-                    </div>
-                `;
-                resultsDiv.appendChild(episodeDiv);
-            });
-        }
-    </script>
 </body>
 </html>
