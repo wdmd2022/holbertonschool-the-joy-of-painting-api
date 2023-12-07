@@ -9,7 +9,7 @@ docker-compose up --build
 
 ## endpoint:
 
-### URL: /episodes
+### URL: /api/episodes
 ### method: GET
 Get list of episodes, optionally filtered by:
 - broadcast month. Multiple months can be specified.
